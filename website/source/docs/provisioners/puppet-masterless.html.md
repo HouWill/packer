@@ -1,14 +1,14 @@
 ---
 description: |
     The masterless Puppet Packer provisioner configures Puppet to run on the
-    machines by Packer from local modules and manifest files. Modules and manifests
-    can be uploaded from your local machine to the remote machine or can simply use
-    remote paths (perhaps obtained using something like the shell provisioner).
-    Puppet is run in masterless mode, meaning it never communicates to a Puppet
-    master.
+    machines by Packer from local modules and manifest files. Modules and
+    manifests can be uploaded from your local machine to the remote machine or can
+    simply use remote paths. Puppet is run in masterless mode, meaning it never
+    communicates to a Puppet master.
 layout: docs
-page_title: 'Puppet (Masterless) Provisioner'
-...
+page_title: 'Puppet Masterless - Provisioners'
+sidebar_current: 'docs-provisioners-puppet-masterless'
+---
 
 # Puppet (Masterless) Provisioner
 
@@ -32,7 +32,7 @@ this.
 The example below is fully functional and expects the configured manifest file
 to exist relative to your working directory.
 
-``` {.javascript}
+``` json
 {
   "type": "puppet-masterless",
   "manifest_file": "site.pp"
@@ -56,7 +56,7 @@ Optional parameters:
 
 -   `execute_command` (string) - The command used to execute Puppet. This has
     various [configuration template
-    variables](/docs/templates/configuration-templates.html) available. See
+    variables](/docs/templates/engine.html) available. See
     below for more information.
 
 -   `extra_arguments` (array of strings) - This is an array of additional options to
@@ -82,7 +82,7 @@ Optional parameters:
     `manifest_file`. It is a separate directory that will be set as the
     "manifestdir" setting on Puppet.
 
-\~&gt; `manifest_dir` is passed to `puppet apply` as the `--manifestdir` option.
+~&gt; `manifest_dir` is passed to `puppet apply` as the `--manifestdir` option.
 This option was deprecated in puppet 3.6, and removed in puppet 4.0. If you have
 multiple manifests you should use `manifest_file` instead.
 
@@ -117,7 +117,7 @@ multiple manifests you should use `manifest_file` instead.
 By default, Packer uses the following command (broken across multiple lines for
 readability) to execute Puppet:
 
-``` {.liquid}
+``` liquid
 cd {{.WorkingDir}} && \
 {{.FacterVars}}{{if .Sudo}} sudo -E {{end}} \
 {{if ne .PuppetBinDir \"\"}}{{.PuppetBinDir}}{{end}}puppet apply \

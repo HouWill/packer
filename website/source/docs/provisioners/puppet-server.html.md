@@ -1,10 +1,11 @@
 ---
 description: |
-    The `puppet-server` Packer provisioner provisions Packer machines with Puppet by
-    connecting to a Puppet master.
+    The puppet-server Packer provisioner provisions Packer machines with Puppet
+    by connecting to a Puppet master.
 layout: docs
-page_title: Puppet Server Provisioner
-...
+page_title: 'Puppet Server - Provisioners'
+sidebar_current: 'docs-provisioners-puppet-server'
+---
 
 # Puppet Server Provisioner
 
@@ -24,7 +25,7 @@ this.
 The example below is fully functional and expects a Puppet server to be
 accessible from your network.
 
-``` {.javascript}
+``` json
 {
    "type": "puppet-server",
    "options": "--test --pluginsync",
@@ -82,10 +83,10 @@ listed below:
 
 -   `execute_command` (string) - This is optional. The command used to execute Puppet. This has
     various [configuration template
-    variables](/docs/templates/configuration-templates.html) available. See
+    variables](/docs/templates/engine.html) available. See
     below for more information. By default, Packer uses the following command:
 
-```
+``` liquid
 {{.FacterVars}} {{if .Sudo}} sudo -E {{end}} \
   {{if ne .PuppetBinDir \"\"}}{{.PuppetBinDir}}/{{end}}puppet agent --onetime --no-daemonize \
   {{if ne .PuppetServer \"\"}}--server='{{.PuppetServer}}' {{end}} \

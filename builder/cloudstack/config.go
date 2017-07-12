@@ -6,17 +6,18 @@ import (
 	"os"
 	"time"
 
-	"github.com/mitchellh/packer/common"
-	"github.com/mitchellh/packer/common/uuid"
-	"github.com/mitchellh/packer/helper/communicator"
-	"github.com/mitchellh/packer/helper/config"
-	"github.com/mitchellh/packer/packer"
-	"github.com/mitchellh/packer/template/interpolate"
+	"github.com/hashicorp/packer/common"
+	"github.com/hashicorp/packer/common/uuid"
+	"github.com/hashicorp/packer/helper/communicator"
+	"github.com/hashicorp/packer/helper/config"
+	"github.com/hashicorp/packer/packer"
+	"github.com/hashicorp/packer/template/interpolate"
 )
 
 // Config holds all the details needed to configure the builder.
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
+	common.HTTPConfig   `mapstructure:",squash"`
 	Comm                communicator.Config `mapstructure:",squash"`
 
 	APIURL       string        `mapstructure:"api_url"`
@@ -26,9 +27,10 @@ type Config struct {
 	HTTPGetOnly  bool          `mapstructure:"http_get_only"`
 	SSLNoVerify  bool          `mapstructure:"ssl_no_verify"`
 
+	CIDRList          []string `mapstructure:"cidr_list"`
 	DiskOffering      string   `mapstructure:"disk_offering"`
 	DiskSize          int64    `mapstructure:"disk_size"`
-	CIDRList          []string `mapstructure:"cidr_list"`
+	Expunge           bool     `mapstructure:"expunge"`
 	Hypervisor        string   `mapstructure:"hypervisor"`
 	InstanceName      string   `mapstructure:"instance_name"`
 	Keypair           string   `mapstructure:"keypair"`
@@ -64,6 +66,11 @@ func NewConfig(raws ...interface{}) (*Config, error) {
 	err := config.Decode(c, &config.DecodeOpts{
 		Interpolate:        true,
 		InterpolateContext: &c.ctx,
+		InterpolateFilter: &interpolate.RenderFilter{
+			Exclude: []string{
+				"user_data",
+			},
+		},
 	}, raws...)
 	if err != nil {
 		return nil, err

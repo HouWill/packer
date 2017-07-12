@@ -1,10 +1,11 @@
 ---
 description: |
-    The Packer vSphere post-processor takes an artifact from the VMware builder and
-    uploads it to a vSphere endpoint.
+    The Packer vSphere post-processor takes an artifact from the VMware builder
+    and uploads it to a vSphere endpoint.
 layout: docs
-page_title: 'vSphere Post-Processor'
-...
+page_title: 'vSphere - Post-Processors'
+sidebar_current: 'docs-post-processors-vsphere'
+---
 
 # vSphere Post-Processor
 
@@ -54,10 +55,9 @@ Optional:
 -   `vm_folder` (string) - The folder within the datastore to store the VM.
 
 -   `vm_network` (string) - The name of the VM network this VM will be
-  added to.
+    added to.
 
 -   `overwrite` (boolean) - If it's true force the system to overwrite the
-  existing files instead create new ones. Default is false
+    existing files instead create new ones. Default is false
 
--   `options` (array of strings) - Custom options to add in ovftool. See `ovftool
-  --help` to list all the options
+-   `options` (array of strings) - Custom options to add in ovftool. See `ovftool   --help` to list all the options

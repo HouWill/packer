@@ -6,9 +6,9 @@ package arm
 import (
 	"fmt"
 
+	"github.com/hashicorp/packer/builder/azure/common/constants"
+	"github.com/hashicorp/packer/packer"
 	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/builder/azure/common/constants"
-	"github.com/mitchellh/packer/packer"
 )
 
 type EndpointType int
@@ -54,10 +54,11 @@ func NewStepGetIPAddress(client *AzureClient, ui packer.Ui, endpoint EndpointTyp
 func (s *StepGetIPAddress) getPrivateIP(resourceGroupName string, ipAddressName string, interfaceName string) (string, error) {
 	resp, err := s.client.InterfacesClient.Get(resourceGroupName, interfaceName, "")
 	if err != nil {
+		s.say(s.client.LastError.Error())
 		return "", err
 	}
 
-	return *(*resp.Properties.IPConfigurations)[0].Properties.PrivateIPAddress, nil
+	return *(*resp.IPConfigurations)[0].PrivateIPAddress, nil
 }
 
 func (s *StepGetIPAddress) getPublicIP(resourceGroupName string, ipAddressName string, interfaceName string) (string, error) {
@@ -66,7 +67,7 @@ func (s *StepGetIPAddress) getPublicIP(resourceGroupName string, ipAddressName s
 		return "", err
 	}
 
-	return *resp.Properties.IPAddress, nil
+	return *resp.IPAddress, nil
 }
 
 func (s *StepGetIPAddress) Run(state multistep.StateBag) multistep.StepAction {

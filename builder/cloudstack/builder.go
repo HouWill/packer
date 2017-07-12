@@ -1,10 +1,10 @@
 package cloudstack
 
 import (
+	"github.com/hashicorp/packer/common"
+	"github.com/hashicorp/packer/helper/communicator"
+	"github.com/hashicorp/packer/packer"
 	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/common"
-	"github.com/mitchellh/packer/helper/communicator"
-	"github.com/mitchellh/packer/packer"
 	"github.com/xanzy/go-cloudstack/cloudstack"
 )
 
@@ -56,7 +56,14 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 	// Build the steps.
 	steps := []multistep.Step{
 		&stepPrepareConfig{},
-		&stepCreateInstance{},
+		&common.StepHTTPServer{
+			HTTPDir:     b.config.HTTPDir,
+			HTTPPortMin: b.config.HTTPPortMin,
+			HTTPPortMax: b.config.HTTPPortMax,
+		},
+		&stepCreateInstance{
+			Ctx: b.config.ctx,
+		},
 		&stepSetupNetworking{},
 		&communicator.StepConnect{
 			Config:    &b.config.Comm,
@@ -81,17 +88,17 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 	// Run the steps.
 	b.runner.Run(state)
 
-	// If there are no templates, then just return
-	template, ok := state.Get("template").(*cloudstack.CreateTemplateResponse)
-	if !ok || template == nil {
-		return nil, nil
+	// If there was an error, return that
+	if rawErr, ok := state.GetOk("error"); ok {
+		ui.Error(rawErr.(error).Error())
+		return nil, rawErr.(error)
 	}
 
 	// Build the artifact and return it
 	artifact := &Artifact{
 		client:   client,
 		config:   b.config,
-		template: template,
+		template: state.Get("template").(*cloudstack.CreateTemplateResponse),
 	}
 
 	return artifact, nil

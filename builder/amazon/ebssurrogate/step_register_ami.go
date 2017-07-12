@@ -5,9 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	awscommon "github.com/hashicorp/packer/builder/amazon/common"
+	"github.com/hashicorp/packer/packer"
 	"github.com/mitchellh/multistep"
-	awscommon "github.com/mitchellh/packer/builder/amazon/common"
-	"github.com/mitchellh/packer/packer"
 )
 
 // StepRegisterAMI creates the AMI.
@@ -25,16 +25,7 @@ func (s *StepRegisterAMI) Run(state multistep.StateBag) multistep.StepAction {
 
 	ui.Say("Registering the AMI...")
 
-	blockDevicesExcludingRoot := make([]*ec2.BlockDeviceMapping, 0, len(s.BlockDevices)-1)
-	for _, blockDevice := range s.BlockDevices {
-		if *blockDevice.DeviceName == s.RootDevice.SourceDeviceName {
-			continue
-		}
-
-		blockDevicesExcludingRoot = append(blockDevicesExcludingRoot, blockDevice)
-	}
-
-	blockDevicesExcludingRoot = append(blockDevicesExcludingRoot, s.RootDevice.createBlockDeviceMapping(snapshotId))
+	blockDevicesExcludingRoot := DeduplicateRootVolume(s.BlockDevices, s.RootDevice, snapshotId)
 
 	registerOpts := &ec2.RegisterImageInput{
 		Name:                &config.AMIName,
@@ -118,10 +109,25 @@ func (s *StepRegisterAMI) Cleanup(state multistep.StateBag) {
 	ec2conn := state.Get("ec2").(*ec2.EC2)
 	ui := state.Get("ui").(packer.Ui)
 
-	ui.Say("Deregistering the AMI because cancelation or error...")
+	ui.Say("Deregistering the AMI because cancellation or error...")
 	deregisterOpts := &ec2.DeregisterImageInput{ImageId: s.image.ImageId}
 	if _, err := ec2conn.DeregisterImage(deregisterOpts); err != nil {
 		ui.Error(fmt.Sprintf("Error deregistering AMI, may still be around: %s", err))
 		return
 	}
+}
+
+func DeduplicateRootVolume(BlockDevices []*ec2.BlockDeviceMapping, RootDevice RootBlockDevice, snapshotId string) []*ec2.BlockDeviceMapping {
+	// Defensive coding to make sure we only add the root volume once
+	blockDevicesExcludingRoot := make([]*ec2.BlockDeviceMapping, 0, len(BlockDevices))
+	for _, blockDevice := range BlockDevices {
+		if *blockDevice.DeviceName == RootDevice.SourceDeviceName {
+			continue
+		}
+
+		blockDevicesExcludingRoot = append(blockDevicesExcludingRoot, blockDevice)
+	}
+
+	blockDevicesExcludingRoot = append(blockDevicesExcludingRoot, RootDevice.createBlockDeviceMapping(snapshotId))
+	return blockDevicesExcludingRoot
 }
